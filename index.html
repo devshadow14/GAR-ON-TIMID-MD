@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAT NOIR-MD — Connexion WhatsApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --neon: #9333EA;
+    --neon-dim: #5b1fa3;
+    --neon-glow: rgba(147,51,234,0.35);
+    --neon2: #C026D3;
+    --danger: #FF4D6D;
+    --text: #F2F2F2;
+    --text-secondary: #b8b8b8;
+    --muted: #7c7c7c;
+    --panel: rgba(8,8,8,0.72);
+    --panel-border: rgba(57,255,20,0.18);
+    --radius: 22px;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+    background: #030303;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(147,51,234,0.14), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(192,38,212,0.10), transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #cataclysm-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .sound-toggle {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 30;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(147,51,234,0.35), rgba(20,5,30,0.85));
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 0 rgba(147,51,234,0);
+    transition: box-shadow 0.25s ease, transform 0.15s ease, border-color 0.25s ease;
+  }
+  .sound-toggle:hover { transform: scale(1.08); border-color: var(--neon); }
+  .sound-toggle.on { box-shadow: 0 0 14px var(--neon-glow); border-color: var(--neon); }
+  .sound-toggle svg { width: 28px; height: 28px; }
+  .cat-body { fill: rgba(0,0,0,0.25); stroke: var(--neon); stroke-width: 2; }
+  .play-icon, .pause-icon { fill: #ffffff; }
+  .play-icon { display: none; }
+  .sound-toggle:not(.on) .play-icon { display: block; }
+  .sound-toggle.on .pause-icon { display: block; }
+  .sound-toggle.on .play-icon { display: none; }
+  .pause-icon { display: none; }
+
+  main {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .brand {
+    text-align: center;
+    margin-bottom: 26px;
+  }
+  .avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    object-fit: cover;
+    border: 2px solid var(--neon);
+    box-shadow: 0 0 24px var(--neon-glow);
+    display: block;
+  }
+  .brand .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--neon);
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+  .brand h1 {
+    font-family: var(--display);
+    font-size: 30px;
+    font-weight: 700;
+    margin: 6px 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .brand p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: var(--mono);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--neon-dim); box-shadow: 0 0 0 3px var(--neon-glow); }
+  input[type="text"]::placeholder { color: #666; }
+
+  button.btn-primary {
+    width: 100%;
+    margin-top: 14px;
+    background: linear-gradient(90deg, var(--neon), var(--neon2));
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+  }
+  button.btn-primary:hover { box-shadow: 0 0 26px var(--neon-glow); }
+  button.btn-primary:active { transform: scale(0.98); }
+  button.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+  .hint { font-size: 12px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .hint span { color: var(--neon); }
+
+  .state { display: none; }
+  .state.active { display: block; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .loading-state { text-align: center; padding: 22px 0 8px; }
+  .dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+  .dot { width: 10px; height: 10px; background: var(--neon); border-radius: 50%; animation: pulse 1.1s infinite ease-in-out; }
+  .dot:nth-child(2) { animation-delay: 0.15s; }
+  .dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes pulse { 0%,100% { opacity: 0.25; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
+  .loading-state .label { font-family: var(--mono); font-size: 13px; color: var(--text-secondary); }
+  .loading-state .timer { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .code-display { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .code-label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; }
+  .code-value {
+    position: relative;
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--neon);
+    text-shadow: 0 0 24px var(--neon-glow);
+    padding: 16px 20px;
+    border: 1px dashed var(--neon-dim);
+    border-radius: 14px;
+    background: rgba(57,255,20,0.05);
+    width: 100%;
+    text-align: center;
+  }
+  .expiry-bar { position: absolute; bottom: -1px; left: 0; height: 3px; background: var(--neon); border-radius: 0 0 14px 14px; transition: width 0.5s linear; }
+
+  .qr-container { background: #fff; padding: 10px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .qr-container canvas, .qr-container img { display: block; width: 130px !important; height: 130px !important; }
+
+  .action-row { display: flex; gap: 10px; width: 100%; }
+  .btn-secondary {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 11px;
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--neon-dim); background: rgba(57,255,20,0.06); }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .steps { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--panel-border); text-align: left; width: 100%; }
+  .steps ol { margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-secondary); line-height: 1.9; }
+  .steps ol li::marker { color: var(--neon); }
+
+  .history { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--panel-border); display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .pill { background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 40px; padding: 4px 12px; font-family: var(--mono); font-size: 11px; color: var(--text-secondary); cursor: pointer; }
+  .pill:hover { border-color: var(--neon-dim); color: var(--neon); }
+
+  .error-msg { display: none; font-size: 13px; color: var(--danger); margin-top: 12px; font-family: var(--mono); text-align: center; }
+  .error-msg.show { display: block; }
+
+  .disconnect-link {
+    text-align: center;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: #b98cff;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    animation: blinkLink 1.4s infinite ease-in-out;
+  }
+  .disconnect-link:hover { color: #d9b8ff; animation-play-state: paused; }
+  @keyframes blinkLink {
+    0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(139,0,255,0.6); }
+    50% { opacity: 0.35; text-shadow: none; }
+  }
+  .disconnect-box {
+    display: none;
+    margin-top: 10px;
+    gap: 8px;
+    flex-direction: column;
+  }
+  .disconnect-box.open { display: flex; }
+  .disconnect-box input {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(139,0,255,0.25);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    outline: none;
+  }
+  .disconnect-box .btn-secondary {
+    border-color: rgba(139,0,255,0.3);
+    color: #d9b8ff;
+  }
+  .disconnect-box .btn-secondary:hover { background: rgba(139,0,255,0.1); border-color: #8b00ff; }
+
+  .connected-badge {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #7fffb0;
+    background: rgba(57,255,20,0.08);
+    border: 1px solid rgba(57,255,20,0.25);
+    border-radius: 40px;
+    padding: 7px 16px;
+  }
+  .connected-badge.show { display: flex; }
+  .badge-dot {
+    width: 8px; height: 8px;
+    background: #39FF14;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #39FF14;
+    animation: badgePulse 1.6s infinite ease-in-out;
+  }
+  @keyframes badgePulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  .btn-danger {
+    display: none;
+    width: 100%;
+    margin-top: 6px;
+    background: transparent;
+    border: 1px solid rgba(255,41,101,0.35);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-danger.show { display: block; }
+  .btn-danger:hover { background: rgba(255,41,101,0.08); border-color: var(--danger); }
+  .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .paw {
+    position: fixed;
+    z-index: 100;
+    pointer-events: none;
+    font-size: 18px;
+    animation: pawFade 0.9s ease forwards;
+  }
+  @keyframes pawFade {
+    0% { opacity: 0.9; transform: scale(0.6) rotate(0deg); }
+    100% { opacity: 0; transform: scale(1.3) rotate(25deg) translateY(-18px); }
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%) translateY(70px);
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 13px 22px;
+    font-size: 13.5px;
+    color: var(--text);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    transition: all 0.35s ease;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  footer { text-align: center; margin-top: 22px; font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.05em; opacity: 0.7; }
+  .sessions-count {
+    font-size: 11.5px;
+    color: #7fffb0;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+  .sessions-count span { font-weight: 700; }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 18px; }
+    .brand h1 { font-size: 25px; }
+    .code-value { font-size: 26px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+  <canvas id="cataclysm-canvas"></canvas>
+
+  <audio id="bgMusic" src="https://files.catbox.moe/3cu8ep.m4a" loop preload="none"></audio>
+
+  <div class="sound-toggle on" id="soundToggle" role="button" tabindex="0" aria-label="Lecture/pause de la musique">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <path class="cat-body" d="M32 8 L14 2 L18 20 C10 26 6 36 8 46 C10 56 20 62 32 62 C44 62 54 56 56 46 C58 36 54 26 46 20 L50 2 Z"/>
+      <polygon class="play-icon" points="27,25 27,45 44,35"/>
+      <g class="pause-icon">
+        <rect x="24" y="25" width="6" height="20" rx="1.5"/>
+        <rect x="34" y="25" width="6" height="20" rx="1.5"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="toast" id="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMessage">Code copié !</span>
+  </div>
+
+  <main>
+    <div class="card">
+      <div class="brand">
+        <img class="avatar" src="https://files.catbox.moe/3cvx9z.jpg" alt="CHAT NOIR-MD">
+        <div class="eyebrow">✦ Pairing Portal</div>
+        <h1>CHAT NOIR-MD</h1>
+        <p>Connectez votre WhatsApp en un éclair</p>
+      </div>
+
+      <div class="state active" id="formState">
+        <label for="phone">Numéro WhatsApp (indicatif pays)</label>
+        <input type="text" id="phone" placeholder="221776227173" inputmode="numeric" autocomplete="off">
+        <button class="btn-primary" id="submitBtn">🐾 Générer mon code</button>
+        <div class="hint">Sans + ni espaces. Ex : <span>221776227173</span></div>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="history" id="historyContainer"></div>
+        <div class="disconnect-link" id="disconnectLink">🔌 Déconnecter une session</div>
+        <div class="disconnect-box" id="disconnectBox">
+          <input type="text" id="disconnectPhone" placeholder="Numéro à déconnecter" inputmode="numeric" autocomplete="off">
+          <button class="btn-secondary" id="disconnectBtn">Déconnecter</button>
+        </div>
+      </div>
+
+      <div class="state" id="loadingState">
+        <div class="loading-state">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="label">Génération du code en cours…</div>
+          <div class="timer" id="timerDisplay">⏱ 0s</div>
+        </div>
+      </div>
+
+      <div class="state" id="codeState">
+        <div class="code-display">
+          <div class="code-label">🔑 Votre code de jumelage</div>
+          <div class="code-value" id="codeValue">
+            <span id="codeText">----</span>
+            <div class="expiry-bar" id="expiryBar" style="width:100%"></div>
+          </div>
+          <div class="qr-container" id="qrContainer"></div>
+
+          <div class="connected-badge" id="connectedBadge">
+            <span class="badge-dot"></span> WhatsApp connecté
+          </div>
+
+          <div class="action-row">
+            <button class="btn-secondary" id="copyBtn">📋 Copier</button>
+            <button class="btn-secondary" id="refreshBtn">🔄 Nouveau code</button>
+          </div>
+          <button class="btn-danger" id="quickDisconnectBtn">🔌 Déconnecter cette session</button>
+
+          <div class="steps">
+            <ol>
+              <li>Ouvrez WhatsApp → Paramètres</li>
+              <li>Appareils liés → Lier un appareil</li>
+              <li>Lier avec un numéro de téléphone</li>
+              <li>Entrez le code ou scannez le QR</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <div class="sessions-count" id="sessionsCount">🟢 <span id="sessionsNumber">0</span> sessions connectées</div>
+      ᴄʀᴇᴀᴛᴇᴅ ʙʏ D𝐄𝐕 𝐌𝐈𝐂𝐇𝐀𝐄𝐋 𝐒𝐂𝐎𝐅𝐈𝐄𝐋𝐃
+    </footer>
+  </main>
+
+<script>
+  // ===== Effet "Éclairs" puissants (zigzag lumineux + flash violet) =====
+  (function lightning() {
+    const canvas = document.getElementById('cataclysm-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let bolts = [];
+    let flashAlpha = 0;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Génère un éclair en zigzag, du haut de l'écran vers le bas, avec des branches
+    function buildBoltPath(startX, startY, endY, wildness) {
+      const points = [{ x: startX, y: startY }];
+      let x = startX, y = startY;
+      const segments = 14 + Math.floor(Math.random() * 8);
+      const stepY = (endY - startY) / segments;
+      for (let i = 0; i < segments; i++) {
+        x += (Math.random() - 0.5) * wildness;
+        y += stepY;
+        points.push({ x, y });
+      }
+      return points;
+    }
+
+    function spawnBolt() {
+      const startX = width * (0.1 + Math.random() * 0.8);
+      const endY = height * (0.45 + Math.random() * 0.55);
+      const main = buildBoltPath(startX, -10, endY, 55);
+
+      // Quelques branches secondaires partant du tronc principal
+      const branches = [];
+      const branchCount = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < branchCount; i++) {
+        const originIndex = 3 + Math.floor(Math.random() * (main.length - 6));
+        const origin = main[originIndex];
+        const branchLen = 4 + Math.floor(Math.random() * 4);
+        const branchEndY = origin.y + branchLen * 12;
+        branches.push(buildBoltPath(origin.x, origin.y, branchEndY, 40));
+      }
+
+      bolts.push({ main, branches, life: 1, decay: 0.05 + Math.random() * 0.03 });
+      flashAlpha = 0.16 + Math.random() * 0.1; // flash violet bref à l'impact
+    }
+
+    function drawPath(points, alpha, coreWidth) {
+      if (points.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+
+      // Halo violet large
+      ctx.strokeStyle = `rgba(147,51,234,${alpha * 0.55})`;
+      ctx.lineWidth = coreWidth * 4;
+      ctx.shadowColor = `rgba(192,38,212,${alpha})`;
+      ctx.shadowBlur = 22;
+      ctx.stroke();
+
+      // Cœur blanc éclatant
+      ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+      ctx.lineWidth = coreWidth;
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    let frame = 0;
+    function draw() {
+      frame++;
+      ctx.clearRect(0, 0, width, height);
+
+      // Flash violet plein écran au moment de l'impact
+      if (flashAlpha > 0) {
+        ctx.fillStyle = `rgba(147,51,234,${flashAlpha})`;
+        ctx.fillRect(0, 0, width, height);
+        flashAlpha -= 0.025;
+      }
+
+      if (frame % 55 === 0 && bolts.length < 2 && Math.random() < 0.85) spawnBolt();
+
+      bolts = bolts.filter(b => b.life > 0);
+      bolts.forEach(b => {
+        b.life -= b.decay;
+        const alpha = Math.max(0, b.life);
+        drawPath(b.main, alpha, 2.4);
+        b.branches.forEach(branch => drawPath(branch, alpha * 0.7, 1.4));
+      });
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ===== Bouton son : musique de fond on/off =====
+  const bgMusic = document.getElementById('bgMusic');
+  bgMusic.volume = 0.35;
+  let soundOn = localStorage.getItem('soundOn') === 'true';
+  const soundToggle = document.getElementById('soundToggle');
+
+  function applySoundState() {
+    soundToggle.classList.toggle('on', soundOn);
+    if (soundOn) {
+      bgMusic.play().catch(() => {
+        // Le navigateur peut bloquer la lecture auto : elle démarrera au prochain clic utilisateur
+      });
+    } else {
+      bgMusic.pause();
+    }
+  }
+  applySoundState();
+
+  // Au tout premier clic sur le site (n'importe où), la musique démarre et le
+  // bouton passe en mode pause. Ne se déclenche qu'une seule fois, et ne
+  // rentre pas en conflit avec un clic direct sur le bouton lui-même.
+  let musicEverStarted = false;
+  function tryAutoStartOnce() {
+    if (musicEverStarted) return;
+    musicEverStarted = true;
+    if (!soundOn) {
+      soundOn = true;
+      localStorage.setItem('soundOn', 'true');
+      applySoundState();
+    }
+    document.removeEventListener('click', tryAutoStartOnce);
+    document.removeEventListener('touchstart', tryAutoStartOnce);
+  }
+  document.addEventListener('click', tryAutoStartOnce);
+  document.addEventListener('touchstart', tryAutoStartOnce);
+
+  soundToggle.addEventListener('click', () => {
+    soundOn = !soundOn;
+    localStorage.setItem('soundOn', soundOn);
+    applySoundState();
+  });
+
+  function playBeep() {
+    if (!soundOn) return;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.value = 0.08;
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    } catch (e) {}
+  }
+
+  // ===== Traînée de pattes au clic =====
+  document.addEventListener('click', (e) => {
+    const paw = document.createElement('div');
+    paw.className = 'paw';
+    paw.textContent = '🐾';
+    paw.style.left = (e.clientX - 9) + 'px';
+    paw.style.top = (e.clientY - 9) + 'px';
+    document.body.appendChild(paw);
+    setTimeout(() => paw.remove(), 900);
+  });
+
+  // ===== Éléments =====
+  const phoneInput = document.getElementById('phone');
+  const submitBtn = document.getElementById('submitBtn');
+  const formState = document.getElementById('formState');
+  const loadingState = document.getElementById('loadingState');
+  const codeState = document.getElementById('codeState');
+  const codeText = document.getElementById('codeText');
+  const errorMsg = document.getElementById('errorMsg');
+  const copyBtn = document.getElementById('copyBtn');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const expiryBar = document.getElementById('expiryBar');
+  const qrContainer = document.getElementById('qrContainer');
+  const historyContainer = document.getElementById('historyContainer');
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toastMessage');
+  const toastIcon = document.getElementById('toastIcon');
+  const connectedBadge = document.getElementById('connectedBadge');
+  const quickDisconnectBtn = document.getElementById('quickDisconnectBtn');
+  const disconnectLink = document.getElementById('disconnectLink');
+  const disconnectBox = document.getElementById('disconnectBox');
+  const disconnectPhone = document.getElementById('disconnectPhone');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const sessionsNumber = document.getElementById('sessionsNumber');
+
+  const CODE_EXPIRY_SECONDS = 60;
+  const POLL_INTERVAL_MS = 1000;
+
+  let currentPhone = '';
+  let pollInterval = null;
+  let connectionWatchInterval = null;
+  let timerInterval = null;
+  let expiryInterval = null;
+  let secondsElapsed = 0;
+
+  // ===== Historique des numéros (local, juste pour le confort) =====
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem('phoneHistory')) || []; } catch { return []; }
+  }
+  function saveHistory(phone) {
+    let hist = loadHistory();
+    hist = hist.filter(p => p !== phone);
+    hist.unshift(phone);
+    hist = hist.slice(0, 5);
+    localStorage.setItem('phoneHistory', JSON.stringify(hist));
+  }
+  function renderHistory() {
+    const hist = loadHistory();
+    historyContainer.innerHTML = '';
+    hist.forEach(phone => {
+      const pill = document.createElement('div');
+      pill.className = 'pill';
+      pill.textContent = phone;
+      pill.addEventListener('click', () => { phoneInput.value = phone; });
+      historyContainer.appendChild(pill);
+    });
+  }
+  renderHistory();
+
+  // ===== Toast =====
+  function showToast(message, icon = '✅') {
+    toastMessage.textContent = message;
+    toastIcon.textContent = icon;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2400);
+  }
+
+  // ===== Gestion des états (form / loading / code) =====
+  function showState(name) {
+    formState.classList.toggle('active', name === 'form');
+    loadingState.classList.toggle('active', name === 'loading');
+    codeState.classList.toggle('active', name === 'code');
+  }
+
+  function showError(message) {
+    errorMsg.textContent = message;
+    errorMsg.classList.add('show');
+  }
+  function clearError() {
+    errorMsg.textContent = '';
+    errorMsg.classList.remove('show');
+  }
+
+  // ===== Timer pendant le chargement =====
+  function startLoadingTimer() {
+    secondsElapsed = 0;
+    timerDisplay.textContent = '⏱ 0s';
+    timerInterval = setInterval(() => {
+      secondsElapsed++;
+      timerDisplay.textContent = `⏱ ${secondsElapsed}s`;
+    }, 1000);
+  }
+  function stopLoadingTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  // ===== Barre d'expiration du code =====
+  function startExpiryBar() {
+    clearInterval(expiryInterval);
+    let remaining = CODE_EXPIRY_SECONDS;
+    expiryBar.style.width = '100%';
+    expiryInterval = setInterval(() => {
+      remaining--;
+      const pct = Math.max(0, (remaining / CODE_EXPIRY_SECONDS) * 100);
+      expiryBar.style.width = pct + '%';
+      if (remaining <= 0) {
+        clearInterval(expiryInterval);
+        showToast('Code expiré, génère-en un nouveau.', '⏱');
+      }
+    }, 1000);
+  }
+  function stopExpiryBar() {
+    clearInterval(expiryInterval);
+    expiryInterval = null;
+  }
+
+  // ===== QR code =====
+  function renderQR(code) {
+    qrContainer.innerHTML = '';
+    try {
+      new QRCode(qrContainer, {
+        text: code,
+        width: 130,
+        height: 130,
+        colorDark: '#000000',
+        colorLight: '#ffffff'
+      });
+    } catch (e) {
+      // qrcodejs peut échouer sur certains formats de code, ce n'est pas bloquant
+    }
+  }
+
+  // ===== Nettoyage des intervalles en cours (avant nouvelle génération) =====
+  function clearAllTimers() {
+    stopLoadingTimer();
+    stopExpiryBar();
+    clearInterval(pollInterval);
+    clearInterval(connectionWatchInterval);
+    pollInterval = null;
+    connectionWatchInterval = null;
+  }
+
+  // ===== Affiche le code obtenu =====
+  function displayCode(code) {
+    clearAllTimers();
+    codeText.textContent = code;
+    connectedBadge.classList.remove('show');
+    quickDisconnectBtn.classList.add('show');
+    showState('code');
+    renderQR(code);
+    startExpiryBar();
+    playBeep();
+    watchConnection(currentPhone);
+  }
+
+  // ===== Interroge /api/code/:phoneNumber jusqu'à obtenir un code =====
+  function pollForCode(phone) {
+    clearInterval(pollInterval);
+    pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/code?phoneNumber=${phone}`);
+        const data = await res.json();
+
+        if (data.status === 'error') {
+          clearInterval(pollInterval);
+          stopLoadingTimer();
+          showState('form');
+          showError(data.message || 'Erreur lors de la génération du code.');
+          return;
+        }
+
+        const code = data.code || data.pairingCode;
+        if (code) {
+          clearInterval(pollInterval);
+          displayCode(code);
+        }
+      } catch (err) {
+        // Erreur réseau ponctuelle : on retente au prochain intervalle
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  // ===== Vérifie périodiquement si le numéro s'est bien connecté à WhatsApp =====
+  function watchConnection(phone) {
+    clearInterval(connectionWatchInterval);
+    connectionWatchInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/code?phoneNumber=${phone}`);
+        const data = await res.json();
+        if (data.status === 'connected') {
+          connectedBadge.classList.add('show');
+          stopExpiryBar();
+          clearInterval(connectionWatchInterval);
+          showToast('WhatsApp connecté avec succès !', '✅');
+        }
+      } catch (err) {
+        // on ignore, on retentera au prochain cycle
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  // ===== Soumission du formulaire =====
+  async function submitPhone(phoneOverride) {
+    const raw = (phoneOverride || phoneInput.value).trim();
+    const clean = raw.replace(/[^0-9]/g, '');
+
+    clearError();
+
+    if (clean.length < 8) {
+      showError('Numéro invalide. Indicatif pays + numéro, sans + ni espaces.');
+      return;
+    }
+
+    currentPhone = clean;
+    phoneInput.value = clean;
+    submitBtn.disabled = true;
+    showState('loading');
+    startLoadingTimer();
+
+    try {
+      const res = await fetch('/api/pair', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: clean })
+      });
+      const data = await res.json();
+
+      if (!data.success && !data.code) {
+        throw new Error(data.message || 'Le serveur de pairing est injoignable.');
+      }
+
+      saveHistory(clean);
+      renderHistory();
+
+      const code = data.code || data.pairingCode;
+      if (code) {
+        displayCode(code);
+      } else {
+        // Le code n'est pas encore prêt : on interroge /api/code en boucle
+        pollForCode(clean);
+      }
+    } catch (err) {
+      stopLoadingTimer();
+      showState('form');
+      showError(err.message || 'Erreur inconnue.');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  submitBtn.addEventListener('click', () => submitPhone());
+  phoneInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitPhone();
+  });
+
+  // ===== Copier le code =====
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(codeText.textContent);
+      showToast('Code copié !', '📋');
+    } catch (e) {
+      showToast('Impossible de copier automatiquement.', '⚠️');
+    }
+  });
+
+  // ===== Régénérer un nouveau code =====
+  refreshBtn.addEventListener('click', () => {
+    if (currentPhone) submitPhone(currentPhone);
+  });
+
+  // ===== Déconnexion (lien + boîte dans le formulaire) =====
+  disconnectLink.addEventListener('click', () => {
+    disconnectBox.classList.toggle('open');
+  });
+
+  async function disconnectSession(phone) {
+    const clean = phone.replace(/[^0-9]/g, '');
+    if (clean.length < 8) {
+      showToast('Numéro invalide.', '⚠️');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/session?phoneNumber=${clean}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Session déconnectée.', '🔌');
+      } else {
+        showToast(data.message || 'Échec de la déconnexion.', '⚠️');
+      }
+    } catch (err) {
+      showToast('Serveur injoignable.', '⚠️');
+    }
+  }
+
+  disconnectBtn.addEventListener('click', () => disconnectSession(disconnectPhone.value));
+
+  quickDisconnectBtn.addEventListener('click', async () => {
+    if (!currentPhone) return;
+    quickDisconnectBtn.disabled = true;
+    await disconnectSession(currentPhone);
+    quickDisconnectBtn.disabled = false;
+    clearAllTimers();
+    showState('form');
+    connectedBadge.classList.remove('show');
+  });
+
+  // ===== Compteur de sessions connectées (footer) =====
+  async function refreshSessionsCount() {
+    try {
+      const res = await fetch('/api/sessions');
+      const data = await res.json();
+      sessionsNumber.textContent = data.count ?? 0;
+    } catch (e) {
+      // silencieux : le compteur n'est pas critique
+    }
+  }
+  refreshSessionsCount();
+  setInterval(refreshSessionsCount, 15000);
+</script>
+</body>
+</html>

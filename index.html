@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GARÇON TIMID-MD— Connexion WhatsApp</title>
+<title>MICHAEL SCOFIELD MD — Connexion WhatsApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
   :root {
-    --neon: #9333EA;
-    --neon-dim: #5b1fa3;
-    --neon-glow: rgba(147,51,234,0.35);
-    --neon2: #C026D3;
-    --danger: #FF4D6D;
+    --neon: #FF2D95;
+    --neon-dim: #7a1050;
+    --neon-glow: rgba(255,45,149,0.32);
+    --neon2: #2563EB;
+    --danger: #FF6B6B;
     --text: #F2F2F2;
     --text-secondary: #b8b8b8;
     --muted: #7c7c7c;
@@ -48,8 +48,8 @@
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(circle at 15% 10%, rgba(147,51,234,0.14), transparent 45%),
-      radial-gradient(circle at 85% 90%, rgba(192,38,212,0.10), transparent 45%);
+      radial-gradient(circle at 15% 10%, rgba(255,45,149,0.14), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(37,99,235,0.11), transparent 45%);
     pointer-events: none;
     z-index: 0;
   }
@@ -69,26 +69,48 @@
     width: 46px;
     height: 46px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(147,51,234,0.35), rgba(20,5,30,0.85));
+    background: linear-gradient(135deg, var(--neon-glow), rgba(10,5,15,0.85));
     border: 1px solid var(--panel-border);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 0 0 rgba(147,51,234,0);
+    box-shadow: 0 0 0 rgba(0,0,0,0);
     transition: box-shadow 0.25s ease, transform 0.15s ease, border-color 0.25s ease;
   }
   .sound-toggle:hover { transform: scale(1.08); border-color: var(--neon); }
   .sound-toggle.on { box-shadow: 0 0 14px var(--neon-glow); border-color: var(--neon); }
   .sound-toggle svg { width: 28px; height: 28px; }
-  .cat-body { fill: rgba(0,0,0,0.25); stroke: var(--neon); stroke-width: 2; }
   .play-icon, .pause-icon { fill: #ffffff; }
-  .play-icon { display: none; }
-  .sound-toggle:not(.on) .play-icon { display: block; }
+  .play-icon { display: block; }
   .sound-toggle.on .pause-icon { display: block; }
   .sound-toggle.on .play-icon { display: none; }
   .pause-icon { display: none; }
+
+  .color-picker {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 30;
+    display: flex;
+    gap: 8px;
+    background: rgba(8,8,8,0.72);
+    border: 1px solid var(--panel-border);
+    border-radius: 40px;
+    padding: 7px;
+    backdrop-filter: blur(10px);
+  }
+  .color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.25);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .color-dot:hover { transform: scale(1.15); }
+  .color-dot.active { border-color: #ffffff; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
 
   main {
     position: relative;
@@ -384,9 +406,15 @@
 
   <audio id="bgMusic" src="https://files.catbox.moe/3cu8ep.m4a" loop preload="none"></audio>
 
-  <div class="sound-toggle on" id="soundToggle" role="button" tabindex="0" aria-label="Lecture/pause de la musique">
+  <div class="color-picker" id="colorPicker">
+    <div class="color-dot" data-theme="principale" style="background:#FF2D95" title="Principale"></div>
+    <div class="color-dot" data-theme="rose" style="background:#8B5CF6" title="Violet"></div>
+    <div class="color-dot" data-theme="orange" style="background:#F97316" title="Orange"></div>
+    <div class="color-dot" data-theme="verte" style="background:#22C55E" title="Verte"></div>
+  </div>
+
+  <div class="sound-toggle" id="soundToggle" role="button" tabindex="0" aria-label="Lecture/pause de la musique">
     <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <path class="cat-body" d="M32 8 L14 2 L18 20 C10 26 6 36 8 46 C10 56 20 62 32 62 C44 62 54 56 56 46 C58 36 54 26 46 20 L50 2 Z"/>
       <polygon class="play-icon" points="27,25 27,45 44,35"/>
       <g class="pause-icon">
         <rect x="24" y="25" width="6" height="20" rx="1.5"/>
@@ -403,17 +431,17 @@
   <main>
     <div class="card">
       <div class="brand">
-        <img class="avatar" src="https://files.catbox.moe/krrtl3.jpg" alt="GARÇON TIMID-MD">
+        <img class="avatar" src="https://files.catbox.moe/sv3ow7.png" alt="MICHAEL SCOFIELD MD">
         <div class="eyebrow">✦ Pairing Portal</div>
-        <h1>GARÇON TIMID-MD</h1>
-        <p>Connectez votre WhatsApp</p>
+        <h1>MICHAEL SCOFIELD MD</h1>
+        <p>Connectez votre WhatsApp en un éclair</p>
       </div>
 
       <div class="state active" id="formState">
         <label for="phone">Numéro WhatsApp (indicatif pays)</label>
-        <input type="text" id="phone" placeholder="225XXXXX" inputmode="numeric" autocomplete="off">
-        <button class="btn-primary" id="submitBtn">🐾 Générer code</button>
-        <div class="hint">Sans + ni espaces. Ex : <span>225XXXXX</span></div>
+        <input type="text" id="phone" placeholder="221776227173" inputmode="numeric" autocomplete="off">
+        <button class="btn-primary" id="submitBtn">🐾 Générer mon code</button>
+        <div class="hint">Sans + ni espaces. Ex : <span>221776227173</span></div>
         <div class="error-msg" id="errorMsg"></div>
         <div class="history" id="historyContainer"></div>
         <div class="disconnect-link" id="disconnectLink">🔌 Déconnecter une session</div>
@@ -426,7 +454,7 @@
       <div class="state" id="loadingState">
         <div class="loading-state">
           <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-          <div class="label">Génération du code en cours…</div>
+          <div class="label" id="loadingLabel">Élaboration du plan…</div>
           <div class="timer" id="timerDisplay">⏱ 0s</div>
         </div>
       </div>
@@ -468,7 +496,44 @@
   </main>
 
 <script>
-  // ===== Effet "Éclairs" puissants (zigzag lumineux + flash violet) =====
+  // ===== Couleur du thème actif, utilisée par le canvas d'éclairs (mise à jour par le sélecteur de couleurs) =====
+  function hexToRgb(hex) {
+    const m = hex.replace('#', '').match(/.{2}/g);
+    return { r: parseInt(m[0], 16), g: parseInt(m[1], 16), b: parseInt(m[2], 16) };
+  }
+  window.__themeRGB = hexToRgb('#FF2D95');
+  window.__themeRGB2 = hexToRgb('#2563EB');
+
+  // ===== Sélecteur de couleurs : applique un thème complet (boutons, halo, éclairs) =====
+  const THEMES = {
+    principale: { neon: '#FF2D95', neon2: '#2563EB', dim: '#7a1050', glow: 'rgba(255,45,149,0.32)' },
+    rose:       { neon: '#8B5CF6', neon2: '#A78BFA', dim: '#4c2f8f', glow: 'rgba(139,92,246,0.32)' },
+    orange:     { neon: '#F97316', neon2: '#FBBF24', dim: '#8a3f0a', glow: 'rgba(249,115,22,0.32)' },
+    verte:      { neon: '#22C55E', neon2: '#10B981', dim: '#0f6b34', glow: 'rgba(34,197,94,0.32)' }
+  };
+
+  function applyTheme(name) {
+    const t = THEMES[name] || THEMES.principale;
+    const root = document.documentElement.style;
+    root.setProperty('--neon', t.neon);
+    root.setProperty('--neon2', t.neon2);
+    root.setProperty('--neon-dim', t.dim);
+    root.setProperty('--neon-glow', t.glow);
+    window.__themeRGB = hexToRgb(t.neon);
+    window.__themeRGB2 = hexToRgb(t.neon2);
+    localStorage.setItem('siteTheme', name);
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.classList.toggle('active', dot.dataset.theme === name);
+    });
+  }
+
+  document.querySelectorAll('.color-dot').forEach(dot => {
+    dot.addEventListener('click', () => applyTheme(dot.dataset.theme));
+  });
+
+  applyTheme(localStorage.getItem('siteTheme') || 'principale');
+
+  // ===== Effet "Éclairs" TRÈS puissants (zigzag lumineux + flash plein écran) =====
   (function lightning() {
     const canvas = document.getElementById('cataclysm-canvas');
     const ctx = canvas.getContext('2d');
@@ -498,42 +563,44 @@
     }
 
     function spawnBolt() {
-      const startX = width * (0.1 + Math.random() * 0.8);
-      const endY = height * (0.45 + Math.random() * 0.55);
-      const main = buildBoltPath(startX, -10, endY, 55);
+      const startX = width * (0.05 + Math.random() * 0.9);
+      const endY = height * (0.5 + Math.random() * 0.5);
+      const main = buildBoltPath(startX, -10, endY, 60);
 
-      // Quelques branches secondaires partant du tronc principal
+      // Plus de branches secondaires, plus denses
       const branches = [];
-      const branchCount = 2 + Math.floor(Math.random() * 3);
+      const branchCount = 3 + Math.floor(Math.random() * 4);
       for (let i = 0; i < branchCount; i++) {
-        const originIndex = 3 + Math.floor(Math.random() * (main.length - 6));
+        const originIndex = 2 + Math.floor(Math.random() * (main.length - 4));
         const origin = main[originIndex];
-        const branchLen = 4 + Math.floor(Math.random() * 4);
+        const branchLen = 5 + Math.floor(Math.random() * 5);
         const branchEndY = origin.y + branchLen * 12;
-        branches.push(buildBoltPath(origin.x, origin.y, branchEndY, 40));
+        branches.push(buildBoltPath(origin.x, origin.y, branchEndY, 45));
       }
 
-      bolts.push({ main, branches, life: 1, decay: 0.05 + Math.random() * 0.03 });
-      flashAlpha = 0.16 + Math.random() * 0.1; // flash violet bref à l'impact
+      bolts.push({ main, branches, life: 1, decay: 0.045 + Math.random() * 0.025 });
+      flashAlpha = 0.28 + Math.random() * 0.16; // flash puissant à l'impact
     }
 
     function drawPath(points, alpha, coreWidth) {
       if (points.length < 2) return;
+      const t = window.__themeRGB;
+      const t2 = window.__themeRGB2 || t;
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
 
-      // Halo violet large
-      ctx.strokeStyle = `rgba(147,51,234,${alpha * 0.55})`;
-      ctx.lineWidth = coreWidth * 4;
-      ctx.shadowColor = `rgba(192,38,212,${alpha})`;
-      ctx.shadowBlur = 22;
+      // Halo large, couleur du thème
+      ctx.strokeStyle = `rgba(${t.r},${t.g},${t.b},${alpha * 0.6})`;
+      ctx.lineWidth = coreWidth * 5;
+      ctx.shadowColor = `rgba(${t2.r},${t2.g},${t2.b},${alpha})`;
+      ctx.shadowBlur = 30;
       ctx.stroke();
 
       // Cœur blanc éclatant
       ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
       ctx.lineWidth = coreWidth;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 14;
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
@@ -543,21 +610,24 @@
       frame++;
       ctx.clearRect(0, 0, width, height);
 
-      // Flash violet plein écran au moment de l'impact
+      // Flash plein écran au moment de l'impact
       if (flashAlpha > 0) {
-        ctx.fillStyle = `rgba(147,51,234,${flashAlpha})`;
+        const t = window.__themeRGB;
+        ctx.fillStyle = `rgba(${t.r},${t.g},${t.b},${flashAlpha})`;
         ctx.fillRect(0, 0, width, height);
-        flashAlpha -= 0.025;
+        flashAlpha -= 0.03;
       }
 
-      if (frame % 55 === 0 && bolts.length < 2 && Math.random() < 0.85) spawnBolt();
+      if (frame % 28 === 0 && bolts.length < 4 && Math.random() < 0.9) spawnBolt();
+      // Frappe double occasionnelle pour un effet encore plus intense
+      if (frame % 90 === 0 && bolts.length < 3 && Math.random() < 0.35) spawnBolt();
 
       bolts = bolts.filter(b => b.life > 0);
       bolts.forEach(b => {
         b.life -= b.decay;
         const alpha = Math.max(0, b.life);
-        drawPath(b.main, alpha, 2.4);
-        b.branches.forEach(branch => drawPath(branch, alpha * 0.7, 1.4));
+        drawPath(b.main, alpha, 3.2);
+        b.branches.forEach(branch => drawPath(branch, alpha * 0.75, 1.8));
       });
 
       requestAnimationFrame(draw);
@@ -606,22 +676,6 @@
     localStorage.setItem('soundOn', soundOn);
     applySoundState();
   });
-
-  function playBeep() {
-    if (!soundOn) return;
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.value = 880;
-      osc.type = 'sine';
-      gain.gain.value = 0.08;
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
-    } catch (e) {}
-  }
 
   // ===== Traînée de pattes au clic =====
   document.addEventListener('click', (e) => {
@@ -718,6 +772,31 @@
   }
 
   // ===== Timer pendant le chargement =====
+  const ESCAPE_MESSAGES = [
+    'Élaboration du plan…',
+    'Étude des plans du pénitencier…',
+    'Décryptage des tatouages…',
+    'Recherche d\'une issue…',
+    'Neutralisation des caméras…',
+    'Le plan prend forme…',
+    'Compte à rebours avant l\'évasion…'
+  ];
+  let loadingLabelEl = null;
+  let loadingMsgInterval = null;
+  function startLoadingMessages() {
+    loadingLabelEl = document.getElementById('loadingLabel');
+    let i = 0;
+    loadingLabelEl.textContent = ESCAPE_MESSAGES[0];
+    loadingMsgInterval = setInterval(() => {
+      i = (i + 1) % ESCAPE_MESSAGES.length;
+      loadingLabelEl.textContent = ESCAPE_MESSAGES[i];
+    }, 2200);
+  }
+  function stopLoadingMessages() {
+    clearInterval(loadingMsgInterval);
+    loadingMsgInterval = null;
+  }
+
   function startLoadingTimer() {
     secondsElapsed = 0;
     timerDisplay.textContent = '⏱ 0s';
@@ -725,10 +804,12 @@
       secondsElapsed++;
       timerDisplay.textContent = `⏱ ${secondsElapsed}s`;
     }, 1000);
+    startLoadingMessages();
   }
   function stopLoadingTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
+    stopLoadingMessages();
   }
 
   // ===== Barre d'expiration du code =====
@@ -786,7 +867,6 @@
     showState('code');
     renderQR(code);
     startExpiryBar();
-    playBeep();
     watchConnection(currentPhone);
   }
 
